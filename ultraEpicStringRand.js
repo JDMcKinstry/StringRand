@@ -1,5 +1,8 @@
 /*	String.[rand, getRandomLowerCaseChar, getRandomUpperCaseChar, getRandomNumberChar, getRandomSymbolChar]	*/
 ;(function() {
+	/**	getDefaultOptions()
+	 *	return basic defaults for main operation
+	 **/
 	function getDefaultOptions() {
 		return {
 			min: 8,
@@ -12,22 +15,65 @@
 		};
 	}
 	
-	function getRandomInt(min, max) { return Math.floor(Math.random()*(max-min+1))+min; }
+	function objMerge(){
+		var a = [].slice.call( arguments ), i = 0;
+        while( a[i] )a[i] = JSON.stringify( a[i++] ).slice( 1,-1 );
+        return JSON.parse( "{"+ a.join() +"}" );
+    }
 	
-	function getRandomLowerCaseChar() { return String.fromCharCode(getRandomInt(97,122)); }
-	
-	function getRandomUpperCaseChar() { return String.fromCharCode(getRandomInt(65,90)); }
-	
-	function getRandomNumberChar() { return String.fromCharCode(getRandomInt(48,57)); }
-	
-	function getRandomSymbolChar() {
-		var a = [
-				String.fromCharCode(getRandomInt(33,47)),
-				String.fromCharCode(getRandomInt(58,64)),
-				String.fromCharCode(getRandomInt(91,96)),
-				String.fromCharCode(getRandomInt(123,126))
-			];
-		return a[getRandomInt(0,a.length-1)];
+	function getRandom(wat) {
+		var args = Array.prototype.slice.call(arguments, 1);
+		switch (wat) {
+			case 0:
+			case 'int':
+				var min = 0, max = 1;
+				if (args) {
+					if (typeof args[0] == 'object') {
+						if (args[0]['min']) min = args[0]['min'];
+						if (args[0]['max']) max = args[0]['max'];
+					}
+					else {
+						if (/number|string/.test(typeof args[0])) min = args[0];
+						if (/number|string/.test(typeof args[1])) max = args[1];
+					}
+				}
+				return Math.floor(Math.random()*(max-min+1))+min;
+			case 1:
+			case 'alpha':
+				var charCase;
+				
+				if (args[0] && typeof args[0] == 'string') charCase = args[0];
+				else if (args[0] == 0 || args [0] == 1) charCase = args[0];
+				
+				switch(charCase) {
+					case 0:
+					case 'low':
+					case 'lower':
+						return String.fromCharCode(getRandom(0, 97,122));
+					case 1:
+					case 'up':
+					case 'upper':
+						return String.fromCharCode(getRandom(0, 65,90));
+					default:
+						var ara = [ String.fromCharCode(getRandom(0, 97,122)), String.fromCharCode(getRandom(0, 65,90)) ];
+						return ara[getRandom(0)];
+				}
+				break;
+			case 2:
+			case 'numb':
+			case 'number':
+				return String.fromCharCode(getRandom(0,48,57));
+			case 3:
+			case 'sym':
+			case 'symbol':
+				return [
+					String.fromCharCode(getRandom(0,33,47)),
+					String.fromCharCode(getRandom(0,58,64)),
+					String.fromCharCode(getRandom(0,91,96)),
+					String.fromCharCode(getRandom(0,123,126))
+				][getRandom(0,0,3)];
+		}
+		return getRandom(getRandom(0,0,3));
 	}
 	
 	function shuffleArray(a) {
@@ -38,82 +84,98 @@
 			a[c] = d;
 		}
 		return a;
-	};
+	}
 	
+	/**	randomString(length, {options})
+	 * 
+	 * **/
 	function randomString() {
 		var args = Array.prototype.slice.call(arguments, 0),
 			opts = getDefaultOptions();
 		
-		for (var x in args) {
-			switch (typeof args[x]) {
-				case 'number':
-					opts.min = opts.max = args[x];
-					break;
-				case 'object':
-					for (var y in args[x]) if (opts.hasOwnProperty(y)) opts[y] = args[x][y];
-					if (args[x]['custom']) {
-						if (args[x]['custom'] instanceof Array && args[x]['custom'].length > 1) opts.custom = args[x]['custom'];
-						else if (typeof args[x]['custom'] == 'string' && args[x]['custom'].length > 1) opts.custom = args[x]['custom'].split('');
+		if (args.length == 1 && typeof args[0] == 'object') opts = objMerge(opts, args[0]);
+		else if (args.length == 1 && /^number|string$/.test(typeof args[0]) && parseInt(args[0])) opts.length = parseInt(args[0]);
+		else if (args.length == 1 && /^string$/.test(typeof args[0]) && args[0].length > 1) opts.custom = args[0];
+		else if (args.length == 2) {
+			for (var x in args) {
+				if (typeof args[x] == 'object') opts = objMerge(opts, args[x]);
+				else if (/^number|string$/.test(typeof args[x]) && parseInt(args[x])) opts.length = parseInt(args[x]);
+				else if (/^string$/.test(typeof args[x]) && args[x].length > 1) opts.custom = args[x];
+			}
+		}
+		
+		if (!opts['length'] || opts.length < 1) {
+			if (opts.min == opts.max) opts.length = opts.min;
+			else if (opts.min < opts.max) opts.length = getRandom(0, opts.min, opts.max);
+			else if (opts.max > opts.max) opts.length = getRandom(0, opts.max, opts.min);
+		}
+		
+		if (opts.length && opts.length > 0) {
+			delete opts['min'];
+			delete opts['max'];
+			
+			var str = '',	//	string to build with
+				reqs = [];
+			
+			if (opts.custom) {	//	 use only characters from custom passed string
+				if (opts.enforce) str = opts.custom;
+				if (str.length < opts.length) while (str.length < opts.length) str += str[getRandom(0, 0, str.length-1)];
+			}
+			else {
+				if (opts.enforce) {	//	ensures there's at least one of each required
+					if (opts.lower) {
+						reqs.push('lower');
+						str += getRandom(1, 0); //	gets a random lowercase char
 					}
-					break;
-				case 'string':
-					opts.string = args[x];
-					break;
+					if (opts.upper) {
+						reqs.push('upper');
+						str += getRandom(1, 1); //	gets a random uppercase char
+					}
+					if (opts.numbers) {
+						reqs.push('numbers');
+						str += getRandom(2); //	gets a random digit char
+					}
+					if (opts.symbols) {
+						reqs.push('symbols');
+						str += getRandom(3); //	gets a random symbol char
+					}
+				}
+				else {
+					if (opts.lower) reqs.push('lower');
+					if (opts.upper) reqs.push('upper');
+					if (opts.numbers) reqs.push('numbers');
+					if (opts.symbols) reqs.push('symbols');
+				}
+				
+				if (str.length < opts.length) {
+					while (str.length < opts.length) {
+						switch (reqs[getRandom(0, 0, reqs.length-1)]) {
+							case 'lower':
+								str += getRandom(1, 0); //	gets a random lowercase char
+								break;
+							case 'upper':
+								str += getRandom(1, 1); //	gets a random uppercase char
+								break;
+							case 'numbers':
+								str += getRandom(2); //	gets a random digit char
+								break;
+							case 'symbols':
+								//	if statement helps to "possibly" reduce the amount of symbols added
+								if (reqs.length > 2) { if (!(str.length%2)) str += getRandom(3); }
+								else str += getRandom(3); //	gets a random symbol char
+								break;
+						}
+					}
+				}
 			}
+			
+			if (str.length > opts.length) str = shuffleArray(str.split('')).join('').substring(0, opts.length);
+			
+			return shuffleArray(str.split('')).join('');
 		}
+		//	TODO: write error throws
 		
-		var len = opts.min == opts.max ? opts.min : getRandomInt(opts.min, opts.max),
-			reqs = [], s = "";
-		
-		if (opts.enforce) {
-			//	ensures there's at least one of each required
-			if (opts.lower) {
-				s += getRandomLowerCaseChar();
-				reqs.push('lower');
-			}
-			if (opts.upper) {
-				s += getRandomUpperCaseChar();
-				reqs.push('upper');
-			}
-			if (opts.numbers) {
-				s += getRandomNumberChar();
-				reqs.push('numbers');
-			}
-			if (opts.symbols) {
-				s += getRandomSymbolChar();
-				reqs.push('symbols');
-			}
-			if (opts.custom) {
-				s += opts.custom[getRandomInt(0, opts.custom.length-1)];
-				reqs.push('custom');
-			}
-		}
-		
-		while (s.length < len) {
-			switch (reqs[getRandomInt(0, reqs.length-1)]) {
-				case 'lower':
-					s += getRandomLowerCaseChar();
-					break;
-				case 'upper':
-					s += getRandomUpperCaseChar();
-					break;
-				case 'numbers':
-					s += getRandomNumberChar();
-					break;
-				case 'symbols':
-					//	if statement helps to "possibly" reduce the amount of symbols added
-					if (reqs.length > 2) { if (!(s.length%2)) s += getRandomSymbolChar(); }
-					else s += getRandomSymbolChar();
-					break;
-				case 'custom':
-					if (reqs.length > 2) { if (!(s.length%2)) s += opts.custom[getRandomInt(0, opts.custom.length-1)]; }
-					else s += opts.custom[getRandomInt(0, opts.custom.length-1)];
-					break;
-			}
-		}
-		
-		s = shuffleArray(s.split('')).join('');
-		return s.length > opts.max ? s.substring(0, opts.max) : s;
+		return void 0;
 	}
 	
 	//	add as global variable
@@ -121,11 +183,11 @@
 	
 	var a = [
 			{ name: "rand", method: randomString },
-			{ name: "randDefaults", method: getDefaultOptions },
+			{ name: "randDefaults", method: getDefaultOptions }/*,
 			{ name: "randLower", method: getRandomLowerCaseChar },
 			{ name: "randUpper", method: getRandomUpperCaseChar },
 			{ name: "randNumber", method: getRandomNumberChar },
-			{ name: "randSymbol", method: getRandomSymbolChar }
+			{ name: "randSymbol", method: getRandomSymbolChar }*/
 		];
 	for (var b in a) {
 		var c = a[b];

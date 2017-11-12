@@ -12,9 +12,9 @@
 	
 	function objMerge(){
 		var a = [].slice.call( arguments ), i = 0;
-        while( a[i] )a[i] = JSON.stringify( a[i++] ).slice( 1,-1 );
-        return JSON.parse( "{"+ a.join() +"}" );
-    }
+        	while( a[i] )a[i] = JSON.stringify( a[i++] ).slice( 1,-1 );
+        	return JSON.parse( "{"+ a.join() +"}" );
+    	}
 	
 	function getRandom(wat) {
 		var args = Array.prototype.slice.call(arguments, 1);

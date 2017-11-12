@@ -26,4 +26,15 @@ String.randDefaults = { symbols: false }
 	Thus:
 	String.rand(20) == "k7Q09TQKij4B1g12hMUo" <- no Symbols
 */
+
+//	Also simple calls:
+//	The following take 1 INT argument for length, if you want more than 1 char
+String.randLower()	//	"d"
+String.randUpper()	//	"A"
+String.randNumber()	//	"3"
+String.randSymbol()	//	"%"
+
+String.randLower(4)	//	"asdf"
+
+
 ```

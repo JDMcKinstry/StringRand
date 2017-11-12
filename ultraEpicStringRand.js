@@ -1,10 +1,6 @@
 /*	String.[rand, getRandomLowerCaseChar, getRandomUpperCaseChar, getRandomNumberChar, getRandomSymbolChar]	*/
 ;(function() {
-	/**	getDefaultOptions()
-	 *	return basic defaults for main operation
-	 **/
-	function getDefaultOptions() {
-		return {
+	var defaultOpts = {
 			min: 8,
 			max: 24,
 			lower: true,
@@ -13,7 +9,6 @@
 			symbols: true,
 			enforce: true
 		};
-	}
 	
 	function objMerge(){
 		var a = [].slice.call( arguments ), i = 0;
@@ -100,8 +95,8 @@
 	 * **/
 	function randomString() {
 		var args = Array.prototype.slice.call(arguments, 0),
-			opts = getDefaultOptions();
-		
+			opts = objMerge(defaultOpts);
+
 		if (args.length == 1 && typeof args[0] == 'object') opts = objMerge(opts, args[0]);
 		else if (args.length == 1 && /^number$/.test(typeof args[0]) && parseInt(args[0])) opts.length = parseInt(args[0]);
 		else if (args.length == 1 && /^string$/.test(typeof args[0]) && args[0].length > 1) opts.custom = args[0];
@@ -120,9 +115,6 @@
 		}
 		
 		if (opts.length && opts.length > 0) {
-			delete opts['min'];
-			delete opts['max'];
-			
 			var str = '',	//	string to build with
 				reqs = [];
 			
@@ -190,17 +182,19 @@
 	//	add as global variable
 	window.hasOwnProperty("randomString")||(window.randomString=randomString);
 	
-	var a = [
-			{ name: "rand", method: randomString },
-			{ name: "randDefaults", method: getDefaultOptions }/*,
-			{ name: "randLower", method: getRandomLowerCaseChar },
-			{ name: "randUpper", method: getRandomUpperCaseChar },
-			{ name: "randNumber", method: getRandomNumberChar },
-			{ name: "randSymbol", method: getRandomSymbolChar }*/
-		];
-	for (var b in a) {
-		var c = a[b];
-		Object['defineProperty'] && !String.hasOwnProperty(c.name)
-			? Object.defineProperty(String, c.name, { value: c.method }) : String[c.name] = c.method;
-	}
+	//	add to STRING OBJECT
+	Object.defineProperty(String, "rand", { value: randomString });
+	Object.defineProperty(String, "randDefaults", {
+		get: function() { return defaultOpts; },
+		set: function() {
+			var args = Array.prototype.slice.call(arguments, 0),
+				opts = (args.length == 1 && typeof args[0] == 'object') ? args[0] : void 0;
+			defaultOpts = opts ? objMerge(defaultOpts, opts) : defaultOpts;
+			return defaultOpts;
+		}
+	});
+	Object.defineProperty(String, "randLower", { value: function() { return getRandom(1,0); } });
+	Object.defineProperty(String, "randUpper", { value: function() { return getRandom(1,1); } });
+	Object.defineProperty(String, "randNumber", { value: function() { return getRandom(2); } });
+	Object.defineProperty(String, "randSymbol", { value: function() { return getRandom(3); } });
 })();

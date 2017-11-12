@@ -1,4 +1,4 @@
-/*	String.[rand, getRandomLowerCaseChar, getRandomUpperCaseChar, getRandomNumberChar, getRandomSymbolChar]	*/
+/*	String.[rand, randLower, randUpper, randNumber, randSymbol]	*/
 ;(function() {
 	var defaultOpts = {
 			min: 8,
@@ -12,9 +12,9 @@
 	
 	function objMerge(){
 		var a = [].slice.call( arguments ), i = 0;
-        	while( a[i] )a[i] = JSON.stringify( a[i++] ).slice( 1,-1 );
-        	return JSON.parse( "{"+ a.join() +"}" );
-    	}
+        while( a[i] )a[i] = JSON.stringify( a[i++] ).slice( 1,-1 );
+        return JSON.parse( "{"+ a.join() +"}" );
+    }
 	
 	function getRandom(wat) {
 		var args = Array.prototype.slice.call(arguments, 1);
@@ -95,7 +95,7 @@
 	 * **/
 	function randomString() {
 		var args = Array.prototype.slice.call(arguments, 0),
-			opts = objMerge(defaultOpts);
+			opts = objMerge({}, defaultOpts);
 
 		if (args.length == 1 && typeof args[0] == 'object') opts = objMerge(opts, args[0]);
 		else if (args.length == 1 && /^number$/.test(typeof args[0]) && parseInt(args[0])) opts.length = parseInt(args[0]);
@@ -179,6 +179,18 @@
 		return void 0;
 	}
 	
+	function getRandomSpecific(num) {
+		var len = Array.prototype.slice.call(arguments, 0)[0],
+			args = Array.prototype.slice.call(arguments, 1);
+		
+		if (len && typeof len == 'number') {
+			var str = getRandom.apply(this, args);
+			while (str.length < len) str += getRandom.apply(this, args);
+			return str;
+		}
+		return getRandom.apply(this, args);
+	}
+	
 	//	add as global variable
 	window.hasOwnProperty("randomString")||(window.randomString=randomString);
 	
@@ -193,8 +205,20 @@
 			return defaultOpts;
 		}
 	});
-	Object.defineProperty(String, "randLower", { value: function() { return getRandom(1,0); } });
-	Object.defineProperty(String, "randUpper", { value: function() { return getRandom(1,1); } });
-	Object.defineProperty(String, "randNumber", { value: function() { return getRandom(2); } });
-	Object.defineProperty(String, "randSymbol", { value: function() { return getRandom(3); } });
+	Object.defineProperty(String, "randLower", { value: function() {
+		var num = Array.prototype.slice.call(arguments, 0)[0];
+		return getRandomSpecific.apply(this, [ num, 1, 0 ]);
+	} });
+	Object.defineProperty(String, "randUpper", { value: function() {
+		var num = Array.prototype.slice.call(arguments, 0)[0];
+		return getRandomSpecific.apply(this, [ num, 1, 1 ]);
+	} });
+	Object.defineProperty(String, "randNumber", { value: function() {
+		var num = Array.prototype.slice.call(arguments, 0)[0];
+		return getRandomSpecific.apply(this, [ num, 2 ]);
+	} });
+	Object.defineProperty(String, "randSymbol", { value: function() {
+		var num = Array.prototype.slice.call(arguments, 0)[0];
+		return getRandomSpecific.apply(this, [ num, 3 ]);
+	} });
 })();

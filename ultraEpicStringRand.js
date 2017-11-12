@@ -86,20 +86,29 @@
 		return a;
 	}
 	
-	/**	randomString(length, {options})
+	/**	randomString(length, [{options}|STRING])
+	 * Paramters are simple and mainly OBJECT orientated for simplicity.
 	 * 
+	 * @example randomString();	//	"9zu93KX9r70x{1yE"
+	 * @example randomString(5);	//	"Zm5'H"
+	 * @example randomString(5, { upper: false, numbers: false, symbols: false });	//	"yxhwr"
+	 * @example randomString(5, { lower: false, numbers: false, symbols: false });	//	"LMHHP"
+	 * @example randomString(5, { upper: false, lower: false, symbols: false });	//	"87989"
+	 * @example randomString(5, { upper: false, lower: false, numbers: false });	//	"/~_+$"
+	 * @example randomString('Custom STRING');	//	"TRo SuINsCtmG"
+	 * @example randomString(10, '01');	//	"0000100101"
 	 * **/
 	function randomString() {
 		var args = Array.prototype.slice.call(arguments, 0),
 			opts = getDefaultOptions();
 		
 		if (args.length == 1 && typeof args[0] == 'object') opts = objMerge(opts, args[0]);
-		else if (args.length == 1 && /^number|string$/.test(typeof args[0]) && parseInt(args[0])) opts.length = parseInt(args[0]);
+		else if (args.length == 1 && /^number$/.test(typeof args[0]) && parseInt(args[0])) opts.length = parseInt(args[0]);
 		else if (args.length == 1 && /^string$/.test(typeof args[0]) && args[0].length > 1) opts.custom = args[0];
 		else if (args.length == 2) {
 			for (var x in args) {
 				if (typeof args[x] == 'object') opts = objMerge(opts, args[x]);
-				else if (/^number|string$/.test(typeof args[x]) && parseInt(args[x])) opts.length = parseInt(args[x]);
+				else if (/^number$/.test(typeof args[x]) && parseInt(args[x])) opts.length = parseInt(args[x]);
 				else if (/^string$/.test(typeof args[x]) && args[x].length > 1) opts.custom = args[x];
 			}
 		}
